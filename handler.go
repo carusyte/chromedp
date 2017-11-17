@@ -349,9 +349,9 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 	return nil
 }
 
-// propagate propogates event to the listeners
+// propagate propagates event to the listeners
 func propagate(h *TargetHandler, method cdp.MethodType, ev interface{}) {
-	h.RLock() // prevent "send on closed channel"
+	h.RLock()
 	defer h.RUnlock()
 	if lsnrs, ok := h.lsnr[method]; ok {
 		for _, l := range lsnrs {
@@ -798,16 +798,11 @@ func (h *TargetHandler) Release(ch <-chan interface{}) {
 	defer h.Unlock()
 
 	lsnrchs := h.lsnrchs[ch]
-	closed := false
 	for evtTyp := range lsnrchs {
 		chs := h.lsnr[evtTyp]
 		for i := 0; i < len(chs); i++ {
 			if ch == chs[i] {
-				if !closed {
-					close(chs[i])
-					chs[i] = nil
-					closed = true
-				}
+				chs[i] = nil
 				if i == len(chs)-1 {
 					chs = chs[:len(chs)-1]
 				} else {
